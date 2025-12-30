@@ -1,0 +1,94 @@
+{
+  "scenarios": [
+    {
+      "type": "functional",
+      "title": "Add New Product to Inventory",
+      "description": "Verify that a user can successfully add a new product to the inventory with all required fields.",
+      "testId": "TC-001",
+      "testDescription": "Check if the product addition process works as intended by entering valid data in all mandatory fields.",
+      "prerequisites": "User must be logged into an account with inventory management privileges.",
+      "stepsToPerform": "1. Navigate to the 'Inventory' section.\n2. Click on the 'Add Product' button.\n3. Enter a valid product name, SKU, price, and quantity.\n4. Click 'Save' or 'Submit'.",
+      "expectedResult": "Product appears in the inventory list with the entered details, and a confirmation message is displayed."
+    },
+    {
+      "type": "functional",
+      "title": "Reject Product Addition with Missing Required Fields",
+      "description": "Ensure that the system prevents adding a product if required fields are missing.",
+      "testId": "TC-002",
+      "testDescription": "Attempt to add a product leaving one or more required fields (e.g., product name, SKU) empty.",
+      "prerequisites": "User is logged in and on the 'Add Product' page.",
+      "stepsToPerform": "1. Leave the product name field empty.\n2. Enter valid values in other fields.\n3. Click 'Save' or 'Submit'.",
+      "expectedResult": "Product is not added and a validation error message appears indicating required fields."
+    },
+    {
+      "type": "functional",
+      "title": "Edit Existing Product",
+      "description": "Verify the ability to edit details for an existing product in inventory.",
+      "testId": "TC-003",
+      "testDescription": "A user updates an existing product's price and quantity.",
+      "prerequisites": "At least one product exists in the inventory.",
+      "stepsToPerform": "1. Locate and select a product from the inventory list.\n2. Click on 'Edit'.\n3. Change the price and quantity.\n4. Click 'Update' or 'Save'.",
+      "expectedResult": "Product information updates in the inventory and reflects the changes."
+    },
+    {
+      "type": "functional",
+      "title": "Delete Product from Inventory",
+      "description": "Ensure that a product can be deleted and is removed from the inventory list.",
+      "testId": "TC-004",
+      "testDescription": "The user removes a product from the inventory and confirms the deletion prompt.",
+      "prerequisites": "At least one product present in the inventory.",
+      "stepsToPerform": "1. Select a product from the inventory list.\n2. Click on 'Delete'.\n3. Confirm deletion in the popup dialog.",
+      "expectedResult": "Product is removed from the inventory list and no longer appears."
+    },
+    {
+      "type": "functional",
+      "title": "Search Products by Name",
+      "description": "Verify that searching for products using the name field returns correct results.",
+      "testId": "TC-005",
+      "testDescription": "A user enters a full or partial product name in the search bar to find products.",
+      "prerequisites": "Inventory contains multiple products with distinct names.",
+      "stepsToPerform": "1. Navigate to the inventory search bar.\n2. Enter a product name or partial name.\n3. Click 'Search'.",
+      "expectedResult": "Inventory list displays products matching the search query."
+    },
+    {
+      "type": "functional",
+      "title": "Prevent Duplicate SKU",
+      "description": "Ensure that the inventory system does not allow products with duplicate SKU codes.",
+      "testId": "TC-006",
+      "testDescription": "Attempt to add a new product using an SKU that already exists in the inventory.",
+      "prerequisites": "Inventory contains at least one product; note the SKU.",
+      "stepsToPerform": "1. Go to the 'Add Product' page.\n2. Enter the existing SKU in the SKU field.\n3. Fill other fields with valid data.\n4. Click 'Save'.",
+      "expectedResult": "A validation error appears indicating the SKU already exists, and product is not added."
+    },
+    {
+      "type": "functional",
+      "title": "Validate Price Input Format",
+      "description": "Check that the system only accepts price inputs in a valid numeric format.",
+      "testId": "TC-007",
+      "testDescription": "Verify that entering invalid price formats (letters, negative numbers) is not accepted.",
+      "prerequisites": "Access to the 'Add Product' form.",
+      "stepsToPerform": "1. Enter a non-numeric value or negative number in the price field.\n2. Complete other required fields with valid data.\n3. Click 'Save'.",
+      "expectedResult": "A validation message appears, and the product is not added."
+    },
+    {
+      "type": "non-functional",
+      "title": "Inventory Load Performance",
+      "description": "Measure performance when loading inventory with a high volume of products.",
+      "testId": "TC-008",
+      "testDescription": "Inventory page is opened when the product count is at its maximum supported threshold.",
+      "prerequisites": "Inventory database is pre-populated with maximum number of products (e.g., 10,000 items).",
+      "stepsToPerform": "1. Login as authorized user.\n2. Navigate to inventory page.",
+      "expectedResult": "Inventory page loads within 2 seconds and remains responsive."
+    },
+    {
+      "type": "non-functional",
+      "title": "Session Timeout Handling",
+      "description": "Ensure that the user session expires after a period of inactivity.",
+      "testId": "TC-009",
+      "testDescription": "User remains idle on the application for the session timeout duration.",
+      "prerequisites": "User is logged into the inventory system.",
+      "stepsToPerform": "1. Remain inactive for the configured session timeout period (e.g., 15 minutes).\n2. Attempt to perform any action after inactivity.",
+      "expectedResult": "User is redirected to the login screen, and a session expired message is displayed."
+    }
+  ]
+}
