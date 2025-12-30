@@ -1,0 +1,424 @@
+openapi: 3.0.3
+info:
+  title: Inventory Management API
+  version: '1.0.0'
+  description: |
+    RESTful API for managing the product inventory system, as derived from the functional and non-functional Gherkin scenarios.
+
+servers:
+  - url: https://api.example.com/v1
+
+tags:
+  - name: Products
+    description: Product inventory operations
+  - name: Authentication
+    description: Session and security handling
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ProductId:
+      in: path
+      name: productId
+      required: true
+      schema:
+        type: string
+        example: "uuid-or-sku"
+      description: Unique ID or SKU for the product
+
+    SearchQuery:
+      in: query
+      name: q
+      required: false
+      schema:
+        type: string
+      description: Search string for product name
+
+  schemas:
+    Product:
+      type: object
+      required:
+        - product_name
+        - sku
+        - price
+        - quantity
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the product (UUID or SKU)
+          example: "WIDGET1001"
+        product_name:
+          type: string
+          example: "Widget A"
+        sku:
+          type: string
+          example: "WIDGET1001"
+        price:
+          type: number
+          format: float
+          example: 29.99
+          minimum: 0.01
+        quantity:
+          type: integer
+          example: 15
+          minimum: 0
+
+    NewProduct:
+      type: object
+      required:
+        - product_name
+        - sku
+        - price
+        - quantity
+      properties:
+        product_name:
+          type: string
+          example: "Widget A"
+        sku:
+          type: string
+          example: "WIDGET1001"
+        price:
+          type: number
+          format: float
+          example: 29.99
+        quantity:
+          type: integer
+          example: 15
+
+    UpdateProduct:
+      type: object
+      properties:
+        price:
+          type: number
+          format: float
+          example: 39.99
+        quantity:
+          type: integer
+          example: 30
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Validation error"
+
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            field:
+              type: string
+              example: "product_name"
+
+    SessionError:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            error_code:
+              type: string
+              example: "SESSION_EXPIRED"
+
+    SuccessMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Operation performed successfully"
+
+security:
+  - bearerAuth: []
+
+paths:
+  /products:
+    post:
+      tags: [Products]
+      summary: Add a new product to inventory
+      operationId: addProduct
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Product data for new product
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewProduct'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessMessage'
+                  - type: object
+                    properties:
+                      product:
+                        $ref: '#/components/schemas/Product'
+              examples:
+                Created:
+                  value:
+                    message: "Product added successfully"
+                    product:
+                      id: "WIDGET1001"
+                      product_name: "Widget A"
+                      sku: "WIDGET1001"
+                      price: 29.99
+                      quantity: 15
+        '400':
+          description: Validation error on product creation (e.g., missing or invalid fields, duplicate SKU)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ValidationError'
+                  - $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                MissingField:
+                  value:
+                    message: "Required field missing: product_name"
+                    field: "product_name"
+                DuplicateSKU:
+                  value:
+                    message: "SKU already exists"
+                    field: "sku"
+                InvalidPrice:
+                  value:
+                    message: "Invalid price format"
+                    field: "price"
+        '401':
+          description: Unauthorized - missing/invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionError'
+              example:
+                message: "Session expired"
+                error_code: "SESSION_EXPIRED"
+
+    get:
+      tags: [Products]
+      summary: List/search products in inventory
+      operationId: listProducts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SearchQuery'
+      responses:
+        '200':
+          description: List of products matching search criteria (or all products)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+              examples:
+                MultipleResults:
+                  value:
+                    products:
+                      - product_name: "Widget A"
+                        sku: "WIDGET1001"
+                        price: 29.99
+                        quantity: 15
+                      - product_name: "Widget B"
+                        sku: "WIDGET1002"
+                        price: 49.99
+                        quantity: 10
+                SingleResult:
+                  value:
+                    products:
+                      - product_name: "Super Gadget"
+                        sku: "GADG2020"
+                        price: 120.00
+                        quantity: 5
+                NoResult:
+                  value:
+                    products: []
+        '401':
+          description: Unauthorized - session expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionError'
+
+  /products/{productId}:
+    get:
+      tags: [Products]
+      summary: Get details of a product
+      operationId: getProduct
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Product not found"
+        '401':
+          description: Unauthorized - session expired
+
+    put:
+      tags: [Products]
+      summary: Edit an existing product (partial update: price and/or quantity)
+      operationId: updateProduct
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        description: Fields to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProduct'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessMessage'
+                  - type: object
+                    properties:
+                      product:
+                        $ref: '#/components/schemas/Product'
+              example:
+                message: "Product updated successfully"
+                product:
+                  product_name: "Widget A"
+                  sku: "WIDGET1001"
+                  price: 39.99
+                  quantity: 30
+        '400':
+          description: Validation error (e.g., invalid price/quantity)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+              example:
+                message: "Invalid price format"
+                field: "price"
+        '401':
+          description: Unauthorized - session expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionError'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Product not found"
+
+    delete:
+      tags: [Products]
+      summary: Delete a product from inventory
+      operationId: deleteProduct
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: Product deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+              example:
+                message: "Product deleted successfully"
+        '401':
+          description: Unauthorized - session expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionError'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Product not found"
+
+  /auth/session:
+    get:
+      tags: [Authentication]
+      summary: Check if user session is active/valid
+      description: Returns session state/error; used for session timeout scenarios.
+      responses:
+        '200':
+          description: Session is valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    example: true
+        '401':
+          description: Session expired or inactive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionError'
+              example:
+                message: "Session expired"
+                error_code: "SESSION_EXPIRED"
+
+  # For non-functional test documentation; implementation may be out-of-band
+  /inventory/performance:
+    get:
+      tags: [Products]
+      summary: Inventory performance stats (for testing only)
+      description: Returns basic timing and sizing info for UI and system health checks.
+      responses:
+        '200':
+          description: Performance statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page_load_ms:
+                    type: integer
+                    example: 1500
+                  product_count:
+                    type: integer
+                    example: 10000
+
+# Extra notes for QA/testers:
+# - All endpoints except /auth/session require Authorization header with Bearer JWT.
+# - 401 response indicates either an invalid/missing session or session timeout (session expired).
+# - Search and validation messages closely match those in Gherkin scenarios for UI parity.
+# - Validation and error messages are designed to be UI-friendly for direct display in front-end.

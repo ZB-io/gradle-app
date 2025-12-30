@@ -1,0 +1,9 @@
+Add New Product with valid details
+Reject Product Addition with missing required fields
+Edit Existing Product - update price and quantity
+Delete Product from Inventory
+Search Products by Name
+Prevent addition of product with duplicate SKU
+Validate Price Input Format in Add Product form
+Inventory page load performance with maximum product count
+Session timeout handling on inactivity
